@@ -1,0 +1,215 @@
+name: fms-prod
+
+services:
+  fms-prod-database:
+    image: postgres:14-alpine
+    container_name: fms-prod-database
+    volumes:
+      - fms-prod-database-data:/var/lib/postgresql/data
+      - fms-prod-logs:/var/log/postgresql
+    ports:
+      - "127.0.0.1:5432:5432"
+    env_file:
+      - .env
+    networks:
+      - fms-prod-network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+  fms-prod-redis:
+    image: redis:7-alpine
+    container_name: fms-prod-redis
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - fms-prod-redis-data:/data
+      - fms-prod-logs:/var/log/redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - fms-prod-network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  fms-prod-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_CLIENT_ID=${VITE_CLIENT_ID}
+    container_name: fms-prod-frontend
+    volumes:
+      - fms-prod-frontend-dist:/frontend-dist
+    env_file:
+      - .env
+    networks:
+      - fms-prod-network
+    restart: "no" # one-shot builder — exits after copying files to volume
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  fms-prod-proxy:
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile
+    container_name: fms-prod-proxy
+    volumes:
+      - fms-prod-frontend-dist:/usr/share/nginx/html:ro
+      - fms-prod-media-files:/app/media
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - fms-prod-network
+    depends_on:
+      fms-prod-frontend:
+        condition: service_completed_successfully
+      fms-prod-backend:
+        condition: service_started
+    restart: unless-stopped
+    # Security hardening
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+  fms-prod-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fms-prod-backend
+    volumes:
+      - fms-prod-media-files:/app/media
+      - fms-prod-backend-logs:/app/logs
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      fms-prod-database:
+        condition: service_healthy
+      fms-prod-redis:
+        condition: service_healthy
+    networks:
+      - fms-prod-network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --tries=1 --spider http://127.0.0.1:8000/api/health/ || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+networks:
+  fms-prod-network:
+    driver: bridge
+
+volumes:
+  fms-prod-database-data:
+  fms-prod-frontend-dist:
+  fms-prod-backend-logs:
+  fms-prod-media-files:
+  fms-prod-redis-data:
+  fms-prod-logs:
