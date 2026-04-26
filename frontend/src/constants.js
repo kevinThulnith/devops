@@ -1,0 +1,38 @@
+export const ACCESS_TOKEN = "access";
+export const REFRESH_TOKEN = "refresh";
+
+export const USER_ROLES = {
+  MANAGER: "MANAGER",
+  OPERATOR: "OPERATOR",
+  SUPERVISOR: "SUPERVISOR",
+  TECHNICIAN: "TECHNICIAN",
+  PURCHASING: "PURCHASING",
+};
+
+export const USER_ROLE_LABELS = {
+  [USER_ROLES.MANAGER]: "Manager",
+  [USER_ROLES.OPERATOR]: "Operator",
+  [USER_ROLES.SUPERVISOR]: "Supervisor",
+  [USER_ROLES.TECHNICIAN]: "Technician",
+  [USER_ROLES.PURCHASING]: "Purchasing Staff",
+};
+
+export const SKILL_CATEGORIES = [
+  "TECHNICAL",
+  "MECHANICAL",
+  "ELECTRICAL",
+  "SOFTWARE",
+  "MANAGEMENT",
+  "ADMINISTRATION",
+  "QUALITY_CONTROL",
+  "SAFETY",
+  "LOGISTICS",
+  "MAINTENANCE",
+  "OPERATIONS",
+  "DESIGN",
+  "COMMUNICATION",
+  "PROBLEM_SOLVING",
+  "OTHER",
+];
+
+export const SKILL_LEVELS = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"];

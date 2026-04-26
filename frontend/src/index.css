@@ -1,0 +1,92 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Poppins, sans-serif;
+  scroll-behavior: smooth;
+}
+
+*::-webkit-scrollbar {
+  width: 0px;
+}
+
+body {
+  color: #e7e5e4;
+  background: #1a1a1a;
+  background-position: center;
+}
+
+/* !Loader component | animation */
+.loader-container {
+  top: 0;
+  left: 0;
+  width: 100vw;
+  z-index: 9999;
+  height: 100vh;
+  margin-top: 0;
+  display: flex;
+  position: fixed;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  .loader-grid {
+    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 12px);
+
+    .block {
+      position: relative;
+      box-sizing: border-box;
+      width: 15px;
+      height: 15px;
+      border-radius: 3px;
+      background: #fff;
+      will-change: transform, opacity;
+      transform: translateZ(0);
+      animation-play-state: running !important;
+    }
+
+    .block:nth-child(4n + 1) {
+      animation: wave_61 2s ease 0s infinite;
+    }
+
+    .block:nth-child(4n + 2) {
+      animation: wave_61 2s ease 0.2s infinite;
+    }
+
+    .block:nth-child(4n + 3) {
+      animation: wave_61 2s ease 0.4s infinite;
+    }
+
+    .block:nth-child(4n + 4) {
+      animation: wave_61 2s ease 0.6s infinite;
+      margin-right: 0;
+    }
+  }
+}
+
+@keyframes wave_61 {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(30px);
+    opacity: 0.2;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
