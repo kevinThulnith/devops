@@ -96,7 +96,7 @@ jobs:
         id: backend-meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/full-devops-backend
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/fms-backend
           tags: |
             type=sha
             type=raw,value=latest
@@ -113,7 +113,7 @@ jobs:
         id: frontend-meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/full-devops-frontend
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/fms-frontend
           tags: |
             type=sha
             type=raw,value=latest
