@@ -44,7 +44,7 @@ jobs:
         working-directory: backend
     env:
       SECRET_KEY: ci-secret-key
-      DEBUG: "True"
+      DEBUG: "False"
       ALLOWED_HOSTS: localhost,127.0.0.1
       DATABASE_ENGINE: sqlite3
       DATABASE_NAME: db.sqlite3
@@ -127,3 +127,20 @@ jobs:
           labels: ${{ steps.frontend-meta.outputs.labels }}
           build-args: |
             VITE_CLIENT_ID=${{ secrets.VITE_CLIENT_ID }}
+
+      - name: Proxy image metadata
+        id: proxy-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/fms-proxy
+          tags: |
+            type=sha
+            type=raw,value=latest
+
+      - name: Build and push proxy image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./proxy
+          push: true
+          tags: ${{ steps.proxy-meta.outputs.tags }}
+          labels: ${{ steps.proxy-meta.outputs.labels }}
