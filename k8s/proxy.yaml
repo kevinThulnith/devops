@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fms-prod-proxy
+  namespace: fms-prod
+  labels:
+    app: fms-prod-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fms-prod-proxy
+  template:
+    metadata:
+      labels:
+        app: fms-prod-proxy
+    spec:
+      containers:
+        - name: proxy
+          image: fms-prod-fms-prod-proxy:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - name: frontend-dist
+              mountPath: /usr/share/nginx/html
+              readOnly: true
+            - name: media
+              mountPath: /app/media
+            - name: tmp
+              mountPath: /tmp
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+      volumes:
+        - name: frontend-dist
+          persistentVolumeClaim:
+            claimName: fms-prod-frontend-dist
+        - name: media
+          persistentVolumeClaim:
+            claimName: fms-prod-backend-media
+        - name: tmp
+          emptyDir: {}
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fms-prod-proxy
+  namespace: fms-prod
+spec:
+  type: NodePort
+  selector:
+    app: fms-prod-proxy
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30080
+      protocol: TCP

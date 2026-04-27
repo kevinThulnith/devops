@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fms-prod-config
+  namespace: fms-prod
+data:
+  DATABASE_ENGINE: "postgresql_psycopg2"
+  DATABASE_HOST: "fms-prod-database"
+  DATABASE_PORT: "5432"
+  REDIS_HOST: "fms-prod-redis"
+  REDIS_PORT: "6379"
+  DEBUG: "False"
+  API_PORT: "8000"
+  CORS_ORIGINS: "http://localhost,http://host.docker.internal,http://host.docker.internal:80"
+  ALLOWED_HOSTS: "*"
+  GOOGLE_CALLBACK_URL: "http://localhost"

@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fms-prod-frontend
+  namespace: fms-prod
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: frontend
+          image: fms-prod-fms-prod-frontend:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: VITE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: fms-prod-secrets
+                  key: VITE_CLIENT_ID
+          volumeMounts:
+            - name: frontend-dist
+              mountPath: /frontend-dist
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+      volumes:
+        - name: frontend-dist
+          persistentVolumeClaim:
+            claimName: fms-prod-frontend-dist
