@@ -10,7 +10,7 @@ pipeline {
     booleanParam(
       name: 'DEPLOY',
       defaultValue: false,
-      description: 'Deploy stack after successful checks (main branch only)'
+      description: 'Deploy stack after successful checks (jenkins branch only)'
     )
   }
 
@@ -67,6 +67,11 @@ pipeline {
           "
         '''
       }
+      post {
+        always {
+          sh 'docker compose down -v fms-prod-database fms-prod-redis || true'
+        }
+      }
     }
 
     stage('Build Images') {
@@ -84,7 +89,7 @@ pipeline {
       steps {
         sh '''
           set -e
-          docker compose up -d fms-prod-backend fms-prod-frontend fms-prod-proxy
+          docker compose up -d fms-prod-backend fms-prod-frontend fms-prod-proxy fms-prod-database fms-prod-redis
 
           backend_ready=0
           for i in $(seq 1 45); do
@@ -102,34 +107,51 @@ pipeline {
             exit 1
           fi
 
+          proxy_ready=0
           for i in $(seq 1 30); do
             if docker compose exec -T fms-prod-proxy wget --quiet --tries=1 --spider http://127.0.0.1/health/; then
-              echo "Health check passed"
-              exit 0
+              proxy_ready=1
+              break
             fi
             sleep 2
           done
 
-          echo "Health check failed"
-          docker compose ps
-          docker compose logs --no-color fms-prod-proxy fms-prod-backend || true
-          exit 1
+          if [ "$proxy_ready" -ne 1 ]; then
+            echo "Proxy health check failed"
+            docker compose ps
+            docker compose logs --no-color fms-prod-proxy fms-prod-backend || true
+            exit 1
+          fi
+
+          echo "All health checks passed"
         '''
+      }
+      post {
+        always {
+          script {
+            // Only cleanup if we're not deploying
+            if (!(env.BRANCH_NAME == 'jenkins' && params.DEPLOY == true)) {
+              sh 'docker compose down -v || true'
+            }
+          }
+        }
       }
     }
 
     stage('Deploy') {
       when {
         allOf {
-          branch 'main'
+          branch 'jenkins'
           expression { return params.DEPLOY }
         }
       }
       steps {
         sh '''
+          set -e
           export DOCKER_BUILDKIT=1
           export COMPOSE_DOCKER_CLI_BUILD=1
-          docker compose up -d --build
+          echo "Deploying to production..."
+          docker compose up -d --remove-orphans
         '''
       }
     }
@@ -139,14 +161,20 @@ pipeline {
     always {
       sh 'docker compose logs --no-color > compose.log || true'
       archiveArtifacts artifacts: 'compose.log', allowEmptyArchive: true
-      sh '''
-        if [ "$BRANCH_NAME" = "main" ] && [ "$DEPLOY" = "true" ]; then
-          echo "DEPLOY=true on main branch: leaving stack running"
-        else
-          docker compose down -v || true
-        fi
-      '''
+      script {
+        if (env.BRANCH_NAME == 'jenkins' && params.DEPLOY == true) {
+          echo "DEPLOY=true on jenkins branch: leaving stack running"
+        } else {
+          sh 'docker compose down -v || true'
+        }
+      }
       sh 'rm -f .env || true'
+    }
+    success {
+      echo "Pipeline completed successfully"
+    }
+    failure {
+      echo "Pipeline failed - check logs for details"
     }
   }
 }

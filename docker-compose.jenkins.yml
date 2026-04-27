@@ -1,16 +1,18 @@
+name: fms-jenkins
+
 services:
   jenkins:
     build:
       context: .
       dockerfile: jenkins/Dockerfile
-    container_name: fms-jenkins
+    container_name: jenkins
     user: root
     restart: unless-stopped
     ports:
       - "8080:8080"
       - "50000:50000"
     volumes:
-      - jenkins_home:/var/jenkins_home
+      - fms_jenkins:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - ./:/workspace
     environment:
@@ -18,4 +20,4 @@ services:
     working_dir: /workspace
 
 volumes:
-  jenkins_home:
+  fms_jenkins:

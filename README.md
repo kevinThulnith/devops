@@ -7,13 +7,13 @@ DevOps project with developer tool use.
 On jenkins branch run this commands on terminal.
 
 ```sh
-docker compose -f docker-compose.jenkins.yml up -d --build
+docker-compose -f docker-compose.jenkins.yml up -d --build
 ```
 
 to create and run jenkins instance.
 
 ```sh
-docker exec fms-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
 to get jenkins instance password for log in.
