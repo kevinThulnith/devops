@@ -64,6 +64,9 @@ jobs:
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
 
       - name: Install dependencies
         run: uv sync --frozen
@@ -108,6 +111,8 @@ jobs:
           push: true
           tags: ${{ steps.backend-meta.outputs.tags }}
           labels: ${{ steps.backend-meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-backend:cache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-backend:cache,mode=max          
 
       - name: Frontend image metadata
         id: frontend-meta
@@ -125,6 +130,8 @@ jobs:
           push: true
           tags: ${{ steps.frontend-meta.outputs.tags }}
           labels: ${{ steps.frontend-meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-frontend:cache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-frontend:cache,mode=max          
           build-args: |
             VITE_CLIENT_ID=${{ secrets.VITE_CLIENT_ID }}
 
@@ -144,3 +151,5 @@ jobs:
           push: true
           tags: ${{ steps.proxy-meta.outputs.tags }}
           labels: ${{ steps.proxy-meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-proxy:cache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-proxy:cache,mode=max          
