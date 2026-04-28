@@ -94,7 +94,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Backend image metadata
         id: backend-meta
         uses: docker/metadata-action@v5
@@ -112,7 +113,7 @@ jobs:
           tags: ${{ steps.backend-meta.outputs.tags }}
           labels: ${{ steps.backend-meta.outputs.labels }}
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-backend:cache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-backend:cache,mode=max          
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-backend:cache,mode=max
 
       - name: Frontend image metadata
         id: frontend-meta
@@ -131,7 +132,7 @@ jobs:
           tags: ${{ steps.frontend-meta.outputs.tags }}
           labels: ${{ steps.frontend-meta.outputs.labels }}
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-frontend:cache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-frontend:cache,mode=max          
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-frontend:cache,mode=max
           build-args: |
             VITE_CLIENT_ID=${{ secrets.VITE_CLIENT_ID }}
 
@@ -152,4 +153,4 @@ jobs:
           tags: ${{ steps.proxy-meta.outputs.tags }}
           labels: ${{ steps.proxy-meta.outputs.labels }}
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-proxy:cache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-proxy:cache,mode=max          
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fms-proxy:cache,mode=max
