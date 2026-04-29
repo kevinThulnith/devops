@@ -28,7 +28,7 @@ frontend-ci:
 
 backend-ci:
   stage: test
-  image: python:3.14-slim
+  image: python:3.14
   variables:
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
     SECRET_KEY: ci-secret-key
@@ -49,6 +49,7 @@ backend-ci:
       - .cache/pip/
       - backend/.venv/
   script:
+    - apt-get update -qq && apt-get install -y -qq gcc libpq-dev
     - cd backend
     - pip install --disable-pip-version-check uv
     - mkdir -p /app/logs
