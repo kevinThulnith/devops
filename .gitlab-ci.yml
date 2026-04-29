@@ -1,3 +1,27 @@
 stages:
   - test
   - build
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+
+frontend-ci:
+  stage: test
+  image: node:24-alpine
+  variables:
+    npm_config_cache: "$CI_PROJECT_DIR/frontend/.npm"
+  cache:
+    key:
+      files:
+        - frontend/package-lock.json
+    paths:
+      - frontend/.npm/
+  script:
+    - cd frontend
+    - npm ci
+    - npm run lint
+    - npm run build
