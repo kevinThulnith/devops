@@ -25,3 +25,33 @@ frontend-ci:
     - npm ci
     - npm run lint
     - npm run build
+
+backend-ci:
+  stage: test
+  image: python:3.14-slim
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    SECRET_KEY: ci-secret-key
+    DEBUG: "False"
+    ALLOWED_HOSTS: localhost,127.0.0.1
+    DATABASE_ENGINE: sqlite3
+    DATABASE_NAME: db.sqlite3
+    REDIS_HOST: localhost
+    REDIS_PORT: "6379"
+    CORS_ORIGINS: http://localhost:3000
+    GOOGLE_CLIENT_ID: ci-placeholder
+    GOOGLE_CLIENT_SECRET: ci-placeholder
+  cache:
+    key:
+      files:
+        - backend/uv.lock
+    paths:
+      - .cache/pip/
+      - backend/.venv/
+  script:
+    - cd backend
+    - pip install --disable-pip-version-check uv
+    - mkdir -p /app/logs
+    - uv sync --frozen
+    - uv run python manage.py test --noinput
+    - uv run python manage.py check --deploy --fail-level=ERROR
