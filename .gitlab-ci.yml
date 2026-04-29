@@ -56,3 +56,17 @@ backend-ci:
     - uv sync --frozen
     - uv run python manage.py test --noinput
     - uv run python manage.py check --deploy --fail-level=ERROR
+
+build-and-push:
+  stage: build
+  image: docker:24.0.7
+  services:
+    - name: docker:24.0.7-dind
+      command: ["--tls=false"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
+  needs:
+    - frontend-ci
+    - backend-ci
