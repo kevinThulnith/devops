@@ -70,3 +70,21 @@ build-and-push:
   needs:
     - frontend-ci
     - backend-ci
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - when: never
+  before_script:
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+  script:
+    - docker build -t "$DOCKERHUB_USERNAME/fms-prod-backend:latest" ./backend
+    - docker tag "$DOCKERHUB_USERNAME/fms-prod-backend:latest" "$DOCKERHUB_USERNAME/fms-prod-backend:$CI_COMMIT_SHORT_SHA"
+    - docker push "$DOCKERHUB_USERNAME/fms-prod-backend:latest"
+    - docker push "$DOCKERHUB_USERNAME/fms-prod-backend:$CI_COMMIT_SHORT_SHA"
+    - docker build --build-arg VITE_CLIENT_ID="$VITE_CLIENT_ID" -t "$DOCKERHUB_USERNAME/fms-prod-frontend:latest" ./frontend
+    - docker tag "$DOCKERHUB_USERNAME/fms-prod-frontend:latest" "$DOCKERHUB_USERNAME/fms-prod-frontend:$CI_COMMIT_SHORT_SHA"
+    - docker push "$DOCKERHUB_USERNAME/fms-prod-frontend:latest"
+    - docker push "$DOCKERHUB_USERNAME/fms-prod-frontend:$CI_COMMIT_SHORT_SHA"
+    - docker build -t "$DOCKERHUB_USERNAME/fms-prod-proxy:latest" ./proxy
+    - docker tag "$DOCKERHUB_USERNAME/fms-prod-proxy:latest" "$DOCKERHUB_USERNAME/fms-prod-proxy:$CI_COMMIT_SHORT_SHA"
+    - docker push "$DOCKERHUB_USERNAME/fms-prod-proxy:latest"
+    - docker push "$DOCKERHUB_USERNAME/fms-prod-proxy:$CI_COMMIT_SHORT_SHA"
