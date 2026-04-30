@@ -21,3 +21,4 @@ backend/media/invoices/
 schema/*.jpg
 testsprite_tests/
 backend/static/
+k8s/
