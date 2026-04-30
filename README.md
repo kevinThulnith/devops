@@ -2,7 +2,17 @@
 
 DevOps project with developer tool use. This branch contains github action code.
 
-## Docker
+## Project Architecture
+
+```sh
+DevOps/
+├── backend/          # Django REST API (Python / uv)
+├── frontend/         # React + Vite + Tailwind CSS
+├── proxy/            # Nginx reverse proxy
+├── docker-compose.yml
+├── .env              # have to create instuctions are provided
+└── README.md
+```
 
 ### Setting up environment variables
 
@@ -78,11 +88,47 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 VITE_CLIENT_ID=your-google-client-id
 ```
 
+## Docker
+
+### Services
+
+| Service  | Image                | Port | Description                                 |
+| -------- | -------------------- | ---- | ------------------------------------------- |
+| Database | `postgres:14-alpine` | 5432 | PostgreSQL database with persistent storage |
+| Redis    | `redis:7-alpine`     | 6379 | In-memory cache (LRU eviction, AOF enabled) |
+| Backend  | Custom (Django)      | 8000 | Django REST API with Gunicorn               |
+| Frontend | Custom (Vite/React)  | —    | One-shot builder; outputs static assets     |
+| Proxy    | Custom (Nginx)       | 80   | Reverse proxy serving frontend & API routes |
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+
 Run this to create docker-compose setup on pc.
 
 ```sh
 docker-compose --env-file .env up --build -d
+
+# View logs
+docker compose logs -f
+
+# Stop all services
+docker compose down
+
+# Stop and remove volumes (⚠️ destroys data)
+docker compose down -v
 ```
+
+### Named Volumes
+
+| Volume                   | Used By          | Mount Path                                 |
+| ------------------------ | ---------------- | ------------------------------------------ |
+| `fms-prod-database-data` | Database         | `/var/lib/postgresql/data`                 |
+| `fms-prod-redis-data`    | Redis            | `/data`                                    |
+| `fms-prod-frontend-dist` | Frontend → Proxy | `/frontend-dist` → `/usr/share/nginx/html` |
+| `fms-prod-media-files`   | Backend → Proxy  | `/app/media`                               |
+| `fms-prod-backend-logs`  | Backend          | `/app/logs`                                |
+| `fms-prod-logs`          | Database, Redis  | Log directories                            |
 
 ## Seed Sample Data
 
