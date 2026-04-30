@@ -15,6 +15,25 @@ spec:
       labels:
         app: fms-prod-proxy
     spec:
+      # Wait for frontend build to complete
+      initContainers:
+        - name: wait-for-frontend
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for frontend build..."
+              until [ -f /usr/share/nginx/html/index.html ]; do
+                echo "Frontend not ready - sleeping"
+                sleep 5
+              done
+              echo "Frontend is ready!"
+          volumeMounts:
+            - name: frontend-dist
+              mountPath: /usr/share/nginx/html
+              readOnly: true
+
       containers:
         - name: proxy
           image: fms-prod-fms-prod-proxy:latest

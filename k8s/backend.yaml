@@ -15,6 +15,40 @@ spec:
       labels:
         app: fms-prod-backend
     spec:
+      # Wait for dependencies before starting backend
+      initContainers:
+        - name: wait-for-database
+          image: postgres:14-alpine
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for PostgreSQL..."
+              until pg_isready -h fms-prod-database -p 5432 -U $POSTGRES_USER; do
+                echo "Database is unavailable - sleeping"
+                sleep 2
+              done
+              echo "Database is up!"
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: fms-prod-secrets
+                  key: POSTGRES_USER
+        
+        - name: wait-for-redis
+          image: redis:7-alpine
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for Redis..."
+              until redis-cli -h fms-prod-redis -p 6379 ping; do
+                echo "Redis is unavailable - sleeping"
+                sleep 2
+              done
+              echo "Redis is up!"
+      
       containers:
         - name: backend
           image: fms-prod-fms-prod-backend:latest
