@@ -34,8 +34,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2.0"
-          memory: 2G
+          cpus: "1.0"
+          memory: 1G
         reservations:
           cpus: "0.5"
           memory: 512M
@@ -196,8 +196,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2.0"
-          memory: 2G
+          cpus: "1.0"
+          memory: 1G
         reservations:
           cpus: "0.5"
           memory: 512M
