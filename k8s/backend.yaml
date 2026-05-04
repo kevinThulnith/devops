@@ -35,7 +35,7 @@ spec:
                 secretKeyRef:
                   name: fms-prod-secrets
                   key: POSTGRES_USER
-        
+
         - name: wait-for-redis
           image: redis:7-alpine
           command:
@@ -48,7 +48,7 @@ spec:
                 sleep 2
               done
               echo "Redis is up!"
-      
+
       containers:
         - name: backend
           image: fms-prod-fms-prod-backend:latest
@@ -92,8 +92,8 @@ spec:
               cpu: 500m
               memory: 512Mi
             limits:
-              cpu: "2"
-              memory: 2Gi
+              cpu: "1"
+              memory: 1Gi
       volumes:
         - name: media
           persistentVolumeClaim:
